@@ -1,4 +1,4 @@
-function [] = GenerateTemplates()
+function [] = generate_templates()
 %GENERATETEMPLATES
 scale = [1,1.1,1.2,1.3];
 [~,scaleNo] = size(scale); 

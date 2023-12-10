@@ -1,4 +1,4 @@
-function [subImages] = split_correlation_map(image, sub_size)
+function [subImages] = split_image(image, sub_size)
     [rows, cols] = size(image);
     sub_width = floor(cols / sub_size);
     subImages = zeros(rows, sub_width, sub_size);
