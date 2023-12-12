@@ -8,15 +8,19 @@ function S = myclassifier(im)
     fourier(169,232) = 0;
     filteredImage = ifft2(ifftshift(fourier)) + mean2(I);
     filteredImage = mat2gray(real(filteredImage));
+    blurred = imgaussfilt(filteredImage,2);
+    noisyDigits = blurred < 0.65;
     % Remove gaussian noise using energy minimisation
     % Limit to 1000 as unnecessary to go further
-    eMin = EM_DenoiseTV(filteredImage,0.2, @(varargin) disp(''),1000);
-    eMinEq =  histeq(eMin);
+    %eMin = EM_DenoiseTV(filteredImage,0.2, @(varargin) disp(''),20);
+    %eMinEq =  histeq(eMin);
     %Threshold for digits
-    noisyDigits = eMinEq < 0.09;
+    %noisyDigits = eMinEq < 0.09;
     %Remove lines using morphology
     disk = strel("disk",1);
     binaryImage = imerode(noisyDigits,disk);
+    binaryImage = imerode(binaryImage,disk);
+    binaryImage = imerode(binaryImage,disk);
     binaryImage = imerode(binaryImage,disk);
     binaryImage = imerode(binaryImage,disk);
     binaryImage = imerode(binaryImage,disk);
@@ -43,8 +47,8 @@ function S = myclassifier(im)
     for i=1:3
         croppedDigit = crop_edges(digitThirds(:,:,i));
         % Uncomment below for debugging to see digits being matched to templates
-        % figure();
-        % imshow(croppedDigit);
+         figure();
+         imshow(croppedDigit);
         greyDigit = croppedDigit*255;
         max_value=0;
         for l = 1:nfiles
