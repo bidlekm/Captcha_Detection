@@ -9,7 +9,7 @@ N = size(img_nrs);
 for n = 1:N
     k = img_nrs(n);
     im = imread(sprintf('Train/captcha_%04d.png', k));
-    my_labels(k,:) = myclassifier(im);
+    my_labels(k,:) = myclassifier(im,Mdl);
 end
 
 fprintf('\n\nAccuracy: \n');
