@@ -22,8 +22,8 @@ function S = myclassifier(im)
     BW2 = imdilate(BW2,disk1);
     BW2 = imdilate(BW2,disk1);
     croppedDigits = crop_edges(BW2);
-    %figure();
-    %imshow(croppedDigits);
+    figure();
+    imshow(croppedDigits);
     digitThirds = split_image(croppedDigits,3);
 
     %Load templates
@@ -32,8 +32,8 @@ function S = myclassifier(im)
     templates = cell(1,nfiles);
     %yLen = 26;
     %xLen = 16;
-    yLen = 40;
-    xLen = 25;
+    yLen = 100;
+    xLen = 50;
     %Find best template match
     for i=1:nfiles
        currentfilename = imagefiles(i).name;
@@ -48,10 +48,8 @@ function S = myclassifier(im)
         %imshow(scaledDigit);
         max_value=0;
         for l = 1:nfiles
-            normx_corrmap=normxcorr2(scaledDigit,templates{1,l}); 
-            current_max = max(normx_corrmap(:));
-            %correlation_map = template_match(scaledDigit,templates{1,l});
-            %current_max = min(correlation_map,[],'all');
+            correlation_map = template_match(scaledDigit,templates{1,l});
+            current_max = min(correlation_map,[],'all');
             if(current_max > max_value)
                 max_value=current_max;
                 digits(i)=map_digit(nfiles,l);
