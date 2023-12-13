@@ -2,6 +2,10 @@ function [cropped] = crop_edges(im)
     %crop_edges
     stats = regionprops(im, 'BoundingBox');
     allBoundingBoxes = cat(1, stats.BoundingBox);
+    if isempty(allBoundingBoxes)
+        cropped=im;
+        return
+    end
     xMin = min(allBoundingBoxes(:, 1));
     yMin = min(allBoundingBoxes(:, 2));
     xMax = 0;

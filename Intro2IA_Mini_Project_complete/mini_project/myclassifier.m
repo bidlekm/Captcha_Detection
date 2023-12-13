@@ -1,5 +1,7 @@
 function S = myclassifier(im)
+    % Preprecossing
     I = im2double(im2gray(im));
+    % Filter in the fourier domain
     fourier = fftshift(fft2(I));
     fourier(160,211) = 0;
     fourier(157,204) = 0;
@@ -7,64 +9,58 @@ function S = myclassifier(im)
     fourier(169,232) = 0;
     filteredImage = ifft2(ifftshift(fourier)) + mean2(I);
     filteredImage = mat2gray(real(filteredImage));
-    denoiseImage = wiener2(filteredImage,[10,10]);
+    % Wiener filter gaussian noise
+    denoiseImage = wiener2(filteredImage,[5,5]);
+    % Thresholding
     eqDigits = histeq(denoiseImage);
-    noisyDigits = eqDigits < 0.07;
+    noisyDigits = eqDigits < 0.085;
+    % Morphology
     disk1 = strel("disk",1);
-    disk2 = strel("disk",2);
     binaryImage = imerode(noisyDigits,disk1);
     binaryImage = imerode(binaryImage,disk1);
     binaryImage = imerode(binaryImage,disk1);
-    %figure();
-    %imshow(binaryImage);
-    BW2 = bwareafilt(binaryImage,[300 50000]);
-    BW2 = imdilate(BW2,disk1);
-    BW2 = imdilate(BW2,disk1);
-    BW2 = imdilate(BW2,disk1);
+    binaryImage = imdilate(binaryImage,disk1);
+    binaryImage = imdilate(binaryImage,disk1);
+    % Area filtering
+    BW2 = bwareafilt(binaryImage,[180 50000]);
+    % Segmentation by cropping and splitting
     croppedDigits = crop_edges(BW2);
-    %figure();
-    %imshow(croppedDigits);
     digitThirds = split_image(croppedDigits,3);
-
-    %Load templates
+    % Load templates
     imagefiles = dir('Templates/*.jpg');      
     nfiles = length(imagefiles);
     templates = cell(1,nfiles);
-    %yLen = 26;
-    %xLen = 16;
     yLen = 40;
     xLen = 25;
-    %Find best template match
     for i=1:nfiles
        currentfilename = imagefiles(i).name;
        templates{1,i} = imread(currentfilename);
     end
+
+    % Template matching
     digits=zeros(1,3);
-    bestCell = cell(1,3);
     for i=1:3
+        % Crop individual digit
         croppedDigit = crop_edges(digitThirds(:,:,i));
+        % Scale digit
         scaledDigit = imresize(croppedDigit,[yLen xLen],'nearest');
-        %figure();
-        %imshow(scaledDigit);
         max_value=0;
         for l = 1:nfiles
-            normx_corrmap=normxcorr2(scaledDigit,templates{1,l}); 
-            current_max = max(normx_corrmap(:));
-            %correlation_map = template_match(scaledDigit,templates{1,l});
-            %current_max = min(correlation_map,[],'all');
-            if(current_max > max_value)
-                max_value=current_max;
-                digits(i)=map_digit(nfiles,l);
-                bestCell{1,i} = templates{1,l};
+            % Check is a valid digit for matching
+            if sum(scaledDigit,'all')~=0
+                % Find maximum correlation
+                normx_corrmap=normxcorr2(scaledDigit,templates{1,l}); 
+                current_max = max(normx_corrmap(:));
+                if(current_max > max_value)
+                    max_value=current_max;
+                    digits(i)=map_digit(nfiles,l);
+                end
+            else
+                % Guess if invalid
+                digits(i)=randi([1,3],1);
             end
         end
     end
-    % figure();
-    % imshow(bestCell{1,1})
-    % figure();
-    % imshow(bestCell{1,2})
-    % figure();
-    % imshow(bestCell{1,3})
     S = digits;
     
 end
